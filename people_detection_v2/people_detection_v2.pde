@@ -36,6 +36,7 @@ HOGDescriptor hog;
 
 Mat m1;
 MatOfRect rect;
+MatOfRect oldRect;
 MatOfDouble weights;
 
 int pixCnt;
@@ -59,6 +60,7 @@ void setup() {
   opencv = new OpenCV(this, width, height); 
   hog = new HOGDescriptor();
   rect = new MatOfRect();
+  oldRect = = new MatOfRect();
   weights = new MatOfDouble();
   
   bm = new BufferedImage(width, height, BufferedImage.TYPE_4BYTE_ABGR);
