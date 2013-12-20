@@ -41,6 +41,7 @@ MatOfRect rect;
 MatOfDouble weights;
 
 ArrayList<Rect> people;
+ArrayList<Rect> falsePositives;
 
 int pixCnt;
 PImage img;
@@ -64,6 +65,7 @@ void setup() {
   hog = new HOGDescriptor();
   rect = new MatOfRect();
   people = new ArrayList<Rect>();
+  falsePositives = new ArrayList<Rect>();
   weights = new MatOfDouble();
   
   bm = new BufferedImage(width, height, BufferedImage.TYPE_4BYTE_ABGR);
@@ -114,7 +116,15 @@ void overlapping(){
     midy = rec.y + (rec.height/2);
     p = new Point(midx,midy);
    
+     for(Rect r: falsePositives){
+       if(people.contains(r)){
+         people.remove(r); 
+        }
+     
+     }
+   
     for(Rect r: people){
+      
       if(!found){
         if(r.contains(p)){
          found = true;
@@ -173,5 +183,16 @@ void draw() {
 
 void captureEvent(Capture c) {
   c.read();
+}
+
+void mouseClicked(){
+  Point p = new Point ((int)mouseX, (int)mouseY);
+  print("mouse clicked! Removing (" + p.x + "," + p.y + ")");
+  for(Rect rec: people){
+   if(rec.contains(p)){
+      falsePositives.add(rec);
+   } 
+  }
+  
 }
 
