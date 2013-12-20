@@ -15,13 +15,16 @@ import processing.video.*;
 import org.opencv.core.Mat;
 import org.opencv.core.Core;
 import org.opencv.core.Rect;
+import org.opencv.core.Point;
 import org.opencv.core.Size;
 import org.opencv.core.CvType;
 import org.opencv.core.MatOfRect;
 import org.opencv.core.MatOfDouble;
+import org.opencv.core.MatOfInt;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.objdetect.HOGDescriptor;
 import org.opencv.objdetect.CascadeClassifier;
+import org.opencv.objdetect.Objdetect;
 
 import java.awt.image.BufferedImage;
 import java.awt.image.WritableRaster;
@@ -34,17 +37,15 @@ OpenCV opencv;
 
 HOGDescriptor hog;
 
-Mat m1;
 MatOfRect rect;
-ArrayList<Rect> people;
-ArrayList<String> positions;
 MatOfDouble weights;
+
+ArrayList<Rect> people;
 
 int pixCnt;
 PImage img;
 BufferedImage bm;
 
-int frame;
 
 void setup() {
   size(1024,576);
@@ -59,12 +60,10 @@ void setup() {
 //      println(cameras[i]);
 //    }
 
-  frame = 0;
   opencv = new OpenCV(this, width, height); 
   hog = new HOGDescriptor();
   rect = new MatOfRect();
   people = new ArrayList<Rect>();
-  positions = new ArrayList<String>();
   weights = new MatOfDouble();
   
   bm = new BufferedImage(width, height, BufferedImage.TYPE_4BYTE_ABGR);
@@ -93,20 +92,59 @@ void convert(PImage _i) {
 //Detects and makes rectangles for every human in the viewing area. The data is placed in the passed in matRect object
   hog.detectMultiScale(m2, rect, weights,(double)0.0, new Size(8,8), new Size(0,0), (double)1.05, (double)2, false); //play around with parameters
 
-//Description of parameters
-// m2 = the image in type Mat
-// rect = an array of rectangles where a pedestrian was found
-// weights = ?? not totally sure, it isn't in the documentation
-// (double)0.0 = hit threshold = The Threshold for the distance between features and SVM classifying plane. This is usually 0 and should be specified in the detector coefficients (as the last free coefficient)... if that s omitted you can manually specify here.
-// new Size(8,8) = window stride. It must be a multiple of block stride.
-// new Size(0,0) = padding. This is just an artifact... should be 0's
-// (double) 1.05 = scale = Coefficient of the detection window increase
-// (double)2 = final threshold/group threshold = coefficient to regulate the similarity threshold. 
-// use mean shift grouping =  ?? I'm not yet sure
  
   bm.flush();
   m2.release();
   m1.release();
+}
+
+//Updates the list of 'people' which contains rectangles that encompass a unique individual. This Keeps the rectangle on screen and does not show multiple rectangles per person.
+void overlapping(){
+  
+  int midx = 0;
+  int midy = 0;
+  boolean found = false;
+  Point p;
+  
+  println(rect.total() + " : " + people.size());
+  for (Rect rec: rect.toArray()){
+    //rect(rec.x, rec.y, rec.width, rec.height);
+    //text("(" + rec.x + "," + rec.y + ")", rec.x, rec.y);
+    midx = rec.x + (rec.width/2);
+    midy = rec.y + (rec.height/2);
+    p = new Point(midx,midy);
+   
+    for(Rect r: people){
+      if(!found){
+        if(r.contains(p)){
+         found = true;
+         r.x = rec.x;
+         r.y = rec.y;
+         r.width = rec.width;
+         r.height = rec.height; 
+        }
+      }
+    }
+    
+    if(!found){
+    people.add(rec);}
+    
+  }
+  found = false;
+  
+}
+
+//Draws all rectangles for the people in the list of people
+void drawRects(){
+  
+    int c = 0;
+    for (Rect rec: people){
+      rect(rec.x, rec.y, rec.width, rec.height);
+      fill(0,255,50);
+      text(c + ": (" + rec.x + "," + rec.y + ")", rec.x, rec.y);
+      noFill();
+      c++;
+  }
 }
 
 
@@ -122,35 +160,15 @@ void draw() {
   stroke(150, 255, 0);
   strokeWeight(2);
   
-  //draw all the rectangles around pedestrians
-  int c = 0;
-  //draw all the rectangles around pedestrians
-  for (Rect rec: rect.toArray()){
-    rect(rec.x, rec.y, rec.width, rec.height);
-    text("(" + rec.x + "," + rec.y + ")", rec.x, rec.y);
-  }
-  if(rect.size() > 1){
-   saveFrame("shot.png"); 
-  }
-//  for (Rect rec: people){
-//    if(positions.contains("(" + rec.x + "," + rec.y + ")") == false || positions.lastIndexOf("(" + rec.x + "," + rec.y + ")") != positions.indexOf("(" + rec.x + "," + rec.y + ")")){
-//    positions.add("(" + rec.x + "," + rec.y + ")");
-//    }
-//    else{
-//      people.remove(rect);
-//    }
-//    if(people.contains(rect)){
-//      
-//    rect(rec.x, rec.y, rec.width, rec.height);
-//    fill(0,0,255);
-//    text("(" + rec.x + "," + rec.y + ")", rec.x, rec.y);
-//    noFill();
-//    println(c + ": " + rec);
-//    c++; 
-//    }
+  overlapping();
+  drawRects();
+
+  
+//Save frame to image  
+//  if(people.total() > 1){
+//   saveFrame("shot-####.png"); 
 //  }
   
- frame++;
 }
 
 void captureEvent(Capture c) {
