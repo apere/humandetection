@@ -36,31 +36,35 @@ HOGDescriptor hog;
 
 Mat m1;
 MatOfRect rect;
-MatOfRect oldRect;
+ArrayList<Rect> people;
+ArrayList<String> positions;
 MatOfDouble weights;
 
 int pixCnt;
 PImage img;
 BufferedImage bm;
 
+int frame;
+
 void setup() {
-  size(640,480);
+  size(1024,576);
   
 
-  video = new Capture(this, width, height,  "HD Pro Webcam C920");
+  video = new Capture(this, width, height,  "HD Pro Webcam C920", 15);
   
-//  Prints a list of all webcams and their appropriate resolutions 
+//  //Prints a list of all webcams and their appropriate resolutions 
 //
 //  String[] cameras = video.list();
 //  for (int i = 0; i < cameras.length; i++) {
 //      println(cameras[i]);
 //    }
 
-
+  frame = 0;
   opencv = new OpenCV(this, width, height); 
   hog = new HOGDescriptor();
   rect = new MatOfRect();
-  oldRect = = new MatOfRect();
+  people = new ArrayList<Rect>();
+  positions = new ArrayList<String>();
   weights = new MatOfDouble();
   
   bm = new BufferedImage(width, height, BufferedImage.TYPE_4BYTE_ABGR);
@@ -115,16 +119,38 @@ void draw() {
   convert(video);
 
   noFill();
-  stroke(0, 255, 0);
+  stroke(150, 255, 0);
   strokeWeight(2);
   
+  //draw all the rectangles around pedestrians
+  int c = 0;
   //draw all the rectangles around pedestrians
   for (Rect rec: rect.toArray()){
     rect(rec.x, rec.y, rec.width, rec.height);
     text("(" + rec.x + "," + rec.y + ")", rec.x, rec.y);
   }
+  if(rect.size() > 1){
+   saveFrame("shot.png"); 
+  }
+//  for (Rect rec: people){
+//    if(positions.contains("(" + rec.x + "," + rec.y + ")") == false || positions.lastIndexOf("(" + rec.x + "," + rec.y + ")") != positions.indexOf("(" + rec.x + "," + rec.y + ")")){
+//    positions.add("(" + rec.x + "," + rec.y + ")");
+//    }
+//    else{
+//      people.remove(rect);
+//    }
+//    if(people.contains(rect)){
+//      
+//    rect(rec.x, rec.y, rec.width, rec.height);
+//    fill(0,0,255);
+//    text("(" + rec.x + "," + rec.y + ")", rec.x, rec.y);
+//    noFill();
+//    println(c + ": " + rec);
+//    c++; 
+//    }
+//  }
   
- 
+ frame++;
 }
 
 void captureEvent(Capture c) {

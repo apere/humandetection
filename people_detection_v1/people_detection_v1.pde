@@ -43,7 +43,7 @@ PImage img;
 BufferedImage bm;
 
 void setup() {
-  size(640,480);
+  size(1024, 576);
   
 
   video = new Capture(this, width, height,  "HD Pro Webcam C920");
