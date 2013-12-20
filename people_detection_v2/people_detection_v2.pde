@@ -53,7 +53,7 @@ void setup() {
   size(1024,576);
   
 
-  video = new Capture(this, width, height,  "HD Pro Webcam C920", 15);
+  video = new Capture(this, width, height,  "HD Pro Webcam C920", 30);
   
 //  //Prints a list of all webcams and their appropriate resolutions 
 //
@@ -66,7 +66,8 @@ void setup() {
   hog = new HOGDescriptor();
   rect = new MatOfRect();
   people = new ArrayList<Rect>();
-  falsePositives = new ArrayList<Point>();
+  falseRects = new ArrayList<Rect>();
+  falsePoints = new ArrayList<Point>();
   weights = new MatOfDouble();
   
   bm = new BufferedImage(width, height, BufferedImage.TYPE_4BYTE_ABGR);
@@ -107,34 +108,35 @@ void overlapping(){
   int midx = 0;
   int midy = 0;
   boolean found = false;
-  Point p;
+  Point midP;
   
-  println(rect.total() + " : " + people.size());
+  for(Rect r: falseRects){
+       if(people.contains(r)){
+         people.remove(r); 
+        }
+     }
+     
   for (Rect rec: rect.toArray()){
     //rect(rec.x, rec.y, rec.width, rec.height);
     //text("(" + rec.x + "," + rec.y + ")", rec.x, rec.y);
     midx = rec.x + (rec.width/2);
     midy = rec.y + (rec.height/2);
-    p = new Point(midx,midy);
-   
-     for(Rect r: people){
-      for(Point p: falsePoints){
-         if(r.contains(p){
-          falseRects.add(r); 
-         }
-      } 
-     }
+    midP = new Point(midx,midy);
+    
+//As is, this false points doesn't work   
+//     for(Rect r: people){
+//      for(Point pi: falsePoints){
+//         if(r.contains(pi)){
+//          falseRects.add(r); 
+//         }
+//      } 
+//     }
      
-     for(Rect r: falseRects){
-       if(people.contains(r)){
-         people.remove(r); 
-        }
-     }
    
     for(Rect r: people){
       
       if(!found){
-        if(r.contains(p)){
+        if(r.contains(midP)){
          found = true;
          r.x = rec.x;
          r.y = rec.y;
@@ -180,7 +182,7 @@ void draw() {
   
   overlapping();
   drawRects();
-
+  text(people.size() + " Person(s) Detected", 50,50);
   
 //Save frame to image  
 //  if(people.total() > 1){
@@ -195,12 +197,23 @@ void captureEvent(Capture c) {
 
 void mouseClicked(){
   Point p = new Point ((int)mouseX, (int)mouseY);
-  print("mouse clicked! Removing (" + p.x + "," + p.y + ")");
-  for(Rect rec: people){
-   if(rec.contains(p)){
-      falsePoints.add(p);
-   } 
-  }
   
+  if(mouseButton == LEFT){
+    println("mouse clicked! Removing (" + p.x + "," + p.y + ")");
+    for(Rect rec: people){
+     if(rec.contains(p)){
+        falseRects.add(rec);
+     } 
+    }
+    
+    println("List of False Positives");
+    for(Rect r: falseRects){
+     println(r); 
+    }
+  }
+  else if(mouseButton == RIGHT){
+    
+    
+  }
 }
 
