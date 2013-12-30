@@ -136,7 +136,7 @@ void overlapping(){
     for(Rect r: people){
       
       if(!found){
-        if(r.contains(midP)){
+        if(r.contains(midP) && rec.x < r.x + r.width && rec.x + rec.width > r.x && r.y < rec.y + rec.height && r.y + r.height > rec.y){  //r.contains(midP) -- Overlapping
          found = true;
          r.x = rec.x;
          r.y = rec.y;
